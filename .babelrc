@@ -1,6 +1,13 @@
 {
-    "presets": [
-        "env",
-        "react"
-    ]
+  "presets": [
+    ["env", { "exclude": ["transform-es2015-classes"] }],
+    ["react"]
+  ],
+  "plugins": [
+    "transform-object-rest-spread",
+    ["babel-plugin-transform-runtime", {
+        "polyfill": false,
+        "regenerator": true
+        }]
+  ]
 }
