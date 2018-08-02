@@ -1,0 +1,76 @@
+@import url('https://fonts.googleapis.com/css?family=Open+Sans');
+
+body {
+    background-color: #1c1c1c;
+    color: #f8f8f8;
+    font-family: 'Open Sans';
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    width: 100%;
+}
+
+table thead {
+    background-color: #1db954;
+}
+
+table tbody tr {
+    background-color: #323232;
+}
+
+table tbody td {
+    padding: 13px;
+    font-size: 14px;
+    letter-spacing: 0.4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+table tbody tr:hover {
+    background-color: #3e3e3e;
+}
+
+table th {
+    font-weight: normal;
+    padding: 13px;
+    text-align: left;
+}
+
+.table-small {
+    font-size: 12px;
+}
+
+.table-music {
+    width: 40vw;
+}
+
+.table-artist, .table-album {
+    width: 10vw;
+}
+
+.table-playlist {
+    width: 18vw;
+}
+
+input {
+    font-size: 30px;
+    border-radius: 40px;
+    border: 0;
+    padding: 10px 20px;
+    margin: 20px 0;
+    width: calc(100% - 40px);
+}
+
+input:hover, input:focus {
+    outline: 0;
+}
+
+.wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.container {
+    margin: 0 15px;
+}

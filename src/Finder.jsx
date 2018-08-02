@@ -7,7 +7,11 @@ class Finder extends Component {
 
     this.state = {
       playlists: [],
+      searching: '',
+      found: [],
     }
+
+    this.handleSearchChange = this.handleSearchChange.bind(this);
   }
 
   componentDidMount() {
@@ -24,7 +28,7 @@ class Finder extends Component {
       headers: {
         'Authorization': `Bearer ${this.props.hash}`,
       },
-      url: `${url}?fields=items(track(album(name),artists(name),name))`,
+      url: `${url}?fields=items(track(album(name),artists(name),name, id))`,
     };
 
     const response = await axios(options);
@@ -32,9 +36,10 @@ class Finder extends Component {
 
     const musics = response.data.items.map((item) => {
       return {
+        id: item.track.id,
         name: item.track.name,
         album: item.track.album.name,
-        artists: item.track.artists[0].name,
+        artist: item.track.artists[0].name,
       }
     });
 
@@ -66,23 +71,80 @@ class Finder extends Component {
     });
 
     if (response.data.next) {
-      console.log(response.data.next);
       setTimeout(() => this.getPlaylists(response.data.next), 300);
     }
+  }
+
+  getFiltered() {
+    const result = [];
+
+    if (this.state.searching.length < 3) {
+      return result;
+    }
+
+    const search = this.state.playlists.forEach(playlist => {
+      const playlistName = playlist.name;
+
+      const found = playlist.tracks.forEach(track => {
+        if (track.name.toLowerCase().includes(this.state.searching.toLowerCase())
+          || track.album.toLowerCase().includes(this.state.searching.toLowerCase())
+          || track.artist.toLowerCase().includes(this.state.searching.toLowerCase())) {
+          result.push({
+            id: track.id,
+            playlist: playlistName,
+            track: track.name,
+            artist: track.artist,
+            album: track.album,
+          });
+        }
+      });
+    });
+
+    return result;
+  }
+
+  async handleSearchChange(e) {
+    await this.setState({
+      searching: e.target.value,
+    });
+
+    this.setState({
+      found: this.getFiltered(),
+    });
   }
 
   render() {
     return (
       <div>
-        playlists
-        {this.state.playlists.map(item => (
-          <div key={item.id}>
-            <strong>{item.name}</strong>
-            {item.tracks.map(music => (
-              <p>{music.name}</p>
-            ))}
-          </div>
-        ))}
+        <input type="text" onChange={this.handleSearchChange} />
+        <table>
+          <thead>
+            <tr>
+              <th className="table-music">Musica</th>
+              <th className="table-artist">Artista</th>
+              <th className="table-album">Álbum</th>
+              <th className="table-playlist">Playlist</th>
+            </tr>
+          </thead>
+          <tbody>
+            {this.state.found.length > 0 ?
+              this.state.found.map(music => (
+                <tr key={music.id}>
+                  <td>{music.track}</td>
+                  <td className="table-small">{music.artist}</td>
+                  <td className="table-small">{music.album}</td>
+                  <td className="table-small">{music.playlist}</td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colspan="4">Busque algo</td>
+                </tr>
+              )
+            }
+          </tbody>
+        </table>
+
+        <p>Playlists carregadas: {this.state.playlists.length}</p>
       </div>
     );
   }
