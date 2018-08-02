@@ -14,6 +14,10 @@ class Finder extends Component {
     this.getPlaylists();
   }
 
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   async getTracks(url) {
     const options = {
       method: 'GET',
@@ -29,6 +33,8 @@ class Finder extends Component {
     const musics = response.data.items.map((item) => {
       return {
         name: item.track.name,
+        album: item.track.album.name,
+        artists: item.track.artists[0].name,
       }
     });
 
@@ -36,14 +42,14 @@ class Finder extends Component {
   }
 
   async getPlaylists(url) {
-    const endpoint = url ? url : 'https://api.spotify.com/v1/users/12142453227/playlists';
-
+    const endpoint = url ? url : 'https://api.spotify.com/v1/users/12142453227/playlists?offset=0&limit=50';
+    await this.sleep(300);
     const options = {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${this.props.hash}`,
       },
-      url: 'https://api.spotify.com/v1/users/12142453227/playlists',
+      url: endpoint,
     };
 
     const response = await axios(options);
@@ -51,13 +57,18 @@ class Finder extends Component {
       return {
         id: item.id,
         name: item.name,
-        trackEndpoint: await this.getTracks(item.tracks.href),
+        tracks: await this.getTracks(item.tracks.href),
       }
     }));
 
     await this.setState({
-      playlists: [...playlist],
+      playlists: [...this.state.playlists, ...playlist],
     });
+
+    if (response.data.next) {
+      console.log(response.data.next);
+      setTimeout(() => this.getPlaylists(response.data.next), 300);
+    }
   }
 
   render() {
@@ -66,7 +77,10 @@ class Finder extends Component {
         playlists
         {this.state.playlists.map(item => (
           <div key={item.id}>
-            <p>{item.name}</p>
+            <strong>{item.name}</strong>
+            {item.tracks.map(music => (
+              <p>{music.name}</p>
+            ))}
           </div>
         ))}
       </div>
