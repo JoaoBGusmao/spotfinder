@@ -9,6 +9,7 @@ class Finder extends Component {
       playlists: [],
       searching: '',
       found: [],
+      errors: [],
     }
 
     this.handleSearchChange = this.handleSearchChange.bind(this);
@@ -23,55 +24,84 @@ class Finder extends Component {
   }
 
   async getTracks(url) {
-    const options = {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${this.props.hash}`,
-      },
-      url: `${url}?fields=items(track(album(name),artists(name),name, id))`,
-    };
+    try {
+      const options = {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.props.hash}`,
+        },
+        url: `${url}?fields=items(track(album(name),artists(name),name, id))`,
+      };
 
-    const response = await axios(options);
-    const track = response.data;
+      const response = await axios(options);
+      const track = response.data;
 
-    const musics = response.data.items.map((item) => {
-      return {
-        id: item.track.id,
-        name: item.track.name,
-        album: item.track.album.name,
-        artist: item.track.artists[0].name,
+      const musics = response.data.items.map((item) => {
+        return {
+          id: item.track.id,
+          name: item.track.name,
+          album: item.track.album.name,
+          artist: item.track.artists[0].name,
+        }
+      });
+      return musics;
+
+    } catch (err) {
+      const status = err.response.status;
+
+      if (status === 429) {
+        const waitTime = parseInt(err.response.headers['retry-after'], 10);
+
+        await this.sleep(waitTime * 1000);
+        return this.getTracks(url);
       }
-    });
+      return [];
+    }
 
-    return musics;
   }
 
   async getPlaylists(url) {
-    const endpoint = url ? url : 'https://api.spotify.com/v1/users/12142453227/playlists?offset=0&limit=50';
-    await this.sleep(300);
-    const options = {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${this.props.hash}`,
-      },
-      url: endpoint,
-    };
+    try {
+      const endpoint = url ? url : 'https://api.spotify.com/v1/users/12142453227/playlists?offset=0&limit=50';
 
-    const response = await axios(options);
-    const playlist = await Promise.all(response.data.items.map(async (item) => {
-      return {
-        id: item.id,
-        name: item.name,
-        tracks: await this.getTracks(item.tracks.href),
+      const options = {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.props.hash}`,
+        },
+        url: endpoint,
+      };
+
+      const response = await axios(options);
+      const playlist = await Promise.all(response.data.items.map(async (item) => {
+        return {
+          id: item.id,
+          name: item.name,
+          tracks: await this.getTracks(item.tracks.href),
+        }
+      }));
+
+      await this.setState({
+        playlists: [...this.state.playlists, ...playlist],
+      });
+
+      if (response.data.next) {
+        setTimeout(() => this.getPlaylists(response.data.next), 300);
       }
-    }));
+    } catch (err) {
+      const status = err.response.status;
 
-    await this.setState({
-      playlists: [...this.state.playlists, ...playlist],
-    });
+      if (status === 401) {
+        window.location.href = "/";
+      }
 
-    if (response.data.next) {
-      setTimeout(() => this.getPlaylists(response.data.next), 300);
+      if (status === 429) {
+        const waitTime = parseInt(err.response.headers['retry-after'], 10);
+
+        await this.sleep(waitTime * 1000);
+        return this.getPlaylists(url);
+      }
+      return {};
     }
   }
 
@@ -100,7 +130,9 @@ class Finder extends Component {
       });
     });
 
-    return result;
+    return result.filter((obj, pos, arr) =>
+      arr.map(mapObj => mapObj['id']).indexOf(obj['id']) === pos
+    );
   }
 
   async handleSearchChange(e) {
@@ -137,7 +169,7 @@ class Finder extends Component {
                 </tr>
               )) : (
                 <tr>
-                  <td colspan="4">Busque algo</td>
+                  <td colSpan="4">Busque algo</td>
                 </tr>
               )
             }
