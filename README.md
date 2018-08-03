@@ -1,4 +1,5 @@
 # Spotfinder
+![alt text](https://raw.githubusercontent.com/JoaoBGusmao/spotfinder/master/print.png)
 I always save all my discover weekly, and after a lot of weeks, it became difficult to search an specific music, and where I have it saved.
 Since Spotify sadly doesn't show wich playlist have a song, I made this simple solution to my problem.
 
