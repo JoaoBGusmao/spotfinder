@@ -31,7 +31,6 @@
     "babel-plugin-transform-runtime": "^6.23.0",
     "nodemon": "^1.18.3",
     "react": "^16.2.0",
-    "react-dom": "^16.2.0",
-    "react-router-dom": "^4.3.1"
+    "react-dom": "^16.2.0"
   }
 }
