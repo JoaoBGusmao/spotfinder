@@ -10,12 +10,47 @@ class Finder extends Component {
       searching: '',
       found: [],
       errors: [],
+      userId: 0,
     }
 
     this.handleSearchChange = this.handleSearchChange.bind(this);
   }
 
   componentDidMount() {
+    this.init();
+  }
+
+  async getUserInfo() {
+    try {
+      const options = {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.props.hash}`,
+        },
+        url: `https://api.spotify.com/v1/me`,
+      };
+
+      const response = await axios(options);
+      const user = response.data;
+
+      return user;
+    } catch (err) {
+      const status = err.response.status;
+
+      if (status === 401) {
+        window.location.href = "/";
+      }
+
+      return {};
+    }
+  }
+
+  async init() {
+    const userInfo = await this.getUserInfo();
+    await this.setState({
+      userId: userInfo.id,
+    });
+
     this.getPlaylists();
   }
 
@@ -62,7 +97,8 @@ class Finder extends Component {
 
   async getPlaylists(url) {
     try {
-      const endpoint = url ? url : 'https://api.spotify.com/v1/users/12142453227/playlists?offset=0&limit=50';
+      const { userId } = this.state;
+      const endpoint = url ? url : `https://api.spotify.com/v1/users/${userId}/playlists?offset=0&limit=50`;
 
       const options = {
         method: 'GET',
